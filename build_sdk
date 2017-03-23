@@ -1,0 +1,88 @@
+#!/bin/bash
+
+# this script builds an Android SDK from scratch, providing all the necessary stuff to build a Xamarin Android app.
+
+ARG=$1
+MACOSX_TOOL="https://dl.google.com/android/repository/tools_r25.2.3-macosx.zip"
+LINUX_TOOL="https://dl.google.com/android/repository/tools_r25.2.3-linux.zip"
+
+WORK_DIR=$( mktemp -d /tmp/androidsdkXXXXX )
+CUR_DIR=$( pwd )
+SDK_MANAGER="$WORK_DIR/tools/bin/sdkmanager"
+
+# which platform?
+PLATFORM=
+test $( uname -a | grep -ci 'Darwin Kernel' ) -eq 1 && PLATFORM="macosx"
+
+if [ -z $PLATFORM ]
+then
+   echo
+   echo "Platform not supported. This script must be run on macOS or Linux!"
+   echo
+   exit 1
+fi
+
+if [ -z $ARG ]
+then
+   echo
+   echo "Target platform not provided. Run this script with 'linux', 'macosx' or 'windows' as argument."
+   echo
+   exit 1
+fi
+
+TARGET_PLATFORM=
+test $( echo $ARG | grep -ci 'linux' ) -eq 1 &&   TARGET_PLATFORM="linux"
+test $( echo $ARG | grep -ci 'macos' ) -eq 1 &&   TARGET_PLATFORM="macosx"
+test $( echo $ARG | grep -ci 'windows' ) -eq 1 && TARGET_PLATFORM="windows"
+if [ -z $TARGET_PLATFORM ]
+then
+   echo
+   echo "Wrong target platform provided. Run this script with 'linux', 'macosx' or 'windows' as argument."
+   echo
+   exit 1
+fi
+
+export REPO_OS_OVERRIDE=$TARGET_PLATFORM
+
+
+
+run_mgr()
+{
+   echo -n "... downloading $@ "
+   $SDK_MANAGER --sdk_root=$WORK_DIR/targetsdk "$@"
+}
+
+
+
+
+echo
+echo "Build Android SDK for platform $PLATFORM"
+echo "* downloading Android tools to: $WORK_DIR"
+curl -s $MACOSX_TOOL -o $WORK_DIR/$( basename $MACOSX_TOOL )
+echo "* unzipping Android tools"
+unzip -q $WORK_DIR/$( basename $MACOSX_TOOL ) -d $WORK_DIR
+
+# the usual stuff
+run_mgr "tools"
+run_mgr "platform-tools"
+run_mgr "build-tools;25.0.2"
+run_mgr "platforms;android-25"
+run_mgr "platforms;android-24"
+run_mgr "extras;android;m2repository"
+run_mgr "extras;google;m2repository"
+run_mgr "extras;google;google_play_services" 
+# run_mgr "ndk-bundle"
+
+# now zip it
+echo "* zipping SDK..."
+cd $WORK_DIR/targetsdk
+ZIP_FILE=androidsdk-$( date +%Y%m%d )-$TARGET_PLATFORM.zip
+zip -qr $CUR_DIR/$ZIP_FILE .
+cd $CUR_DIR
+
+echo
+echo "* Your Android SDK is completed: $ZIP_FILE"
+echo
+
+exit 0
+
