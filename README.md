@@ -6,7 +6,7 @@ It can be run on both macOS and Linux.
 
 Target SDK's for macOS, Linux and Windows can be created by appending the platform on the command line:
 
-`./build_sdk macosx`
+`./build_sdk macosx | linux | windows`
 
 The end result is a zipped Android SDK that is ready for usage, without additional configuring required.
 
