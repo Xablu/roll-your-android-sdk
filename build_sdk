@@ -3,8 +3,8 @@
 # this script builds an Android SDK from scratch, providing all the necessary stuff to build a Xamarin Android app.
 
 ARG=$1
-MACOSX_TOOL="https://dl.google.com/android/repository/tools_r25.2.3-macosx.zip"
-LINUX_TOOL="https://dl.google.com/android/repository/tools_r25.2.3-linux.zip"
+MACOSX_TOOLS="https://dl.google.com/android/repository/tools_r25.2.3-macosx.zip"
+LINUX_TOOLS="https://dl.google.com/android/repository/tools_r25.2.3-linux.zip"
 
 WORK_DIR=$( mktemp -d /tmp/androidsdkXXXXX )
 CUR_DIR=$( pwd )
@@ -13,11 +13,28 @@ SDK_MANAGER="$WORK_DIR/tools/bin/sdkmanager"
 # which platform?
 PLATFORM=
 test $( uname -a | grep -ci 'Darwin Kernel' ) -eq 1 && PLATFORM="macosx"
+test $( uname -a | grep -ci 'Linux' ) -eq 1         && PLATFORM="linux"
 
 if [ -z $PLATFORM ]
 then
    echo
    echo "Platform not supported. This script must be run on macOS or Linux!"
+   echo
+   exit 1
+fi
+
+if [ -z $( which java 2>/dev/null ) ]
+then
+   echo
+   echo "Can't find java. Please install it and re-run the script"
+   echo
+   exit 1
+fi
+
+if [ -z $( which zip 2>/dev/null ) ]
+then
+   echo
+   echo "Can't find zip. Please install it and re-run the script"
    echo
    exit 1
 fi
@@ -29,6 +46,9 @@ then
    echo
    exit 1
 fi
+
+test "$PLATFORM" = "macosx" && TOOLS=$MACOSX_TOOLS
+test "$PLATFORM" = "linux"  && TOOLS=$LINUX_TOOLS
 
 TARGET_PLATFORM=
 test $( echo $ARG | grep -ci 'linux' ) -eq 1 &&   TARGET_PLATFORM="linux"
@@ -56,11 +76,11 @@ run_mgr()
 
 
 echo
-echo "Build Android SDK for platform $PLATFORM"
+echo "Build Android SDK for platform $TARGET_PLATFORM"
 echo "* downloading Android tools to: $WORK_DIR"
-curl -s $MACOSX_TOOL -o $WORK_DIR/$( basename $MACOSX_TOOL )
+curl -s $TOOLS -o $WORK_DIR/$( basename $TOOLS )
 echo "* unzipping Android tools"
-unzip -q $WORK_DIR/$( basename $MACOSX_TOOL ) -d $WORK_DIR
+unzip -q $WORK_DIR/$( basename $TOOLS ) -d $WORK_DIR
 
 # the usual stuff
 run_mgr "tools"
