@@ -69,7 +69,8 @@ export REPO_OS_OVERRIDE=$TARGET_PLATFORM
 run_mgr()
 {
    echo -n "... downloading $@ "
-   $SDK_MANAGER --sdk_root=$WORK_DIR/targetsdk "$@"
+   #$SDK_MANAGER --sdk_root=$WORK_DIR/targetsdk "$@"
+   $SDK_MANAGER --verbose --sdk_root=$WORK_DIR/targetsdk "$@"
 }
 
 
@@ -95,9 +96,11 @@ run_mgr "extras;google;google_play_services"
 
 # now zip it
 echo "* zipping SDK..."
-cd $WORK_DIR/targetsdk
-ZIP_FILE=androidsdk-$( date +%Y%m%d )-$TARGET_PLATFORM.zip
-zip -qr $CUR_DIR/$ZIP_FILE .
+SDK_SUFFIX="$( date +%Y%m%d )-$TARGET_PLATFORM"
+cd $WORK_DIR
+mv targetsdk androidsdk-$SDK_SUFFIX
+ZIP_FILE="androidsdk-$SDK_SUFFIX.zip"
+zip -qr $CUR_DIR/$ZIP_FILE androidsdk-$SDK_SUFFIX
 cd $CUR_DIR
 
 echo
